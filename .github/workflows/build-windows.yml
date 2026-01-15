@@ -1,0 +1,172 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Ermöglicht manuellen Start
+
+env:
+  APP_NAME: ColabGUIGenerator
+  APP_VERSION: 2.0.0
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+    
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller pywebview requests openai pillow
+    
+    - name: Create App Icon
+      run: |
+        # Erstelle ein einfaches Icon mit Python
+        python -c "
+from PIL import Image, ImageDraw
+
+# Erstelle 256x256 Icon
+size = 256
+img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+draw = ImageDraw.Draw(img)
+
+# Hintergrund (Gradient-ähnlich)
+for y in range(size):
+    r = int(26 + (y/size) * 20)
+    g = int(26 + (y/size) * 40)
+    b = int(46 + (y/size) * 30)
+    draw.line([(0, y), (size, y)], fill=(r, g, b, 255))
+
+# Kreis in der Mitte
+center = size // 2
+radius = size // 3
+draw.ellipse([center-radius, center-radius, center+radius, center+radius], 
+             fill=(0, 212, 255, 255))
+
+# Speichern als ICO
+img.save('assets/icon.ico', format='ICO', sizes=[(256, 256), (128, 128), (64, 64), (32, 32), (16, 16)])
+print('Icon erstellt')
+"
+      shell: bash
+    
+    - name: Build Executable with PyInstaller
+      run: |
+        pyinstaller --noconfirm --clean `
+          --name=${{ env.APP_NAME }} `
+          --onefile `
+          --windowed `
+          --icon=assets/icon.ico `
+          --add-data "core;core" `
+          --hidden-import=webview `
+          --hidden-import=webview.platforms.winforms `
+          --hidden-import=webview.platforms.edgechromium `
+          --hidden-import=clr `
+          --hidden-import=pythonnet `
+          --hidden-import=requests `
+          --hidden-import=openai `
+          --hidden-import=PIL `
+          --hidden-import=PIL.Image `
+          --exclude-module=tkinter `
+          --exclude-module=matplotlib `
+          --exclude-module=numpy `
+          --exclude-module=pandas `
+          main.py
+      shell: pwsh
+    
+    - name: Download Inno Setup
+      run: |
+        # Inno Setup herunterladen und installieren
+        Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "innosetup.exe"
+        Start-Process -FilePath "innosetup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
+      shell: pwsh
+    
+    - name: Create Inno Setup Script
+      run: |
+        @"
+        #define MyAppName "Colab GUI Generator"
+        #define MyAppVersion "${{ env.APP_VERSION }}"
+        #define MyAppPublisher "Colab GUI Generator"
+        #define MyAppExeName "ColabGUIGenerator.exe"
+
+        [Setup]
+        AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+        AppName={#MyAppName}
+        AppVersion={#MyAppVersion}
+        AppPublisher={#MyAppPublisher}
+        DefaultDirName={autopf}\{#MyAppName}
+        DefaultGroupName={#MyAppName}
+        OutputDir=dist
+        OutputBaseFilename=ColabGUIGenerator_Setup_${{ env.APP_VERSION }}
+        Compression=lzma2/ultra64
+        SolidCompression=yes
+        WizardStyle=modern
+        SetupIconFile=assets\icon.ico
+        PrivilegesRequired=lowest
+
+        [Languages]
+        Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+        Name: "english"; MessagesFile: "compiler:Default.isl"
+
+        [Tasks]
+        Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: checkedonce
+
+        [Files]
+        Source: "dist\ColabGUIGenerator.exe"; DestDir: "{app}"; Flags: ignoreversion
+        Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
+        Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+
+        [Icons]
+        Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+        Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+        Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
+        [Run]
+        Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
+        "@ | Out-File -FilePath "setup.iss" -Encoding UTF8
+      shell: pwsh
+    
+    - name: Build Installer with Inno Setup
+      run: |
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
+      shell: pwsh
+    
+    - name: List Build Artifacts
+      run: |
+        Write-Host "=== Build Artifacts ==="
+        Get-ChildItem -Path dist -Recurse | Format-Table Name, Length
+      shell: pwsh
+    
+    - name: Upload Portable Executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: ColabGUIGenerator-Portable
+        path: dist/ColabGUIGenerator.exe
+        retention-days: 30
+    
+    - name: Upload Windows Installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: ColabGUIGenerator-Setup
+        path: dist/ColabGUIGenerator_Setup_*.exe
+        retention-days: 30
+    
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/ColabGUIGenerator.exe
+          dist/ColabGUIGenerator_Setup_*.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

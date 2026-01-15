@@ -1,0 +1,20 @@
+# =============================================================================
+# COLAB GUI GENERATOR - Abhängigkeiten
+# =============================================================================
+# Installation: pip install -r requirements.txt
+# =============================================================================
+
+# GUI Framework
+pywebview>=4.0
+
+# HTTP Requests
+requests>=2.28
+
+# OpenAI API (für KI-Funktionen)
+openai>=1.0
+
+# Bildverarbeitung
+Pillow>=9.0
+
+# Optional: Für Windows .exe Build
+# pyinstaller>=5.0
